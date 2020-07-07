@@ -25,6 +25,6 @@
 #		- Een script "~/bin/slaap" dat de pc ordentelijk in slaapstand zet. Dat kan b.v. de
 #			opdracht "systemctl suspend" zijn, met evt. toevoegingen naar wens.
 #	
-[ -n "$epcdir" -a -f "$epcdir/_slaap"  ] && { mv "$epcdir/_slaap"  "$epcdir/_slaap?"; echo ~/bin/slaap; }
+[ -n "$epcdir" -a -f "$epcdir/_slaap"  ] && { mv "$epcdir/_slaap"  "$epcdir/_slaap?"; ~/bin/slaap; }
 # OPM: afsluitend slaapje overbrugt tijd tss. mv naar _slaap? in ander proces, en effectieve slaapstand
 [ -n "$epcdir" -a -f "$epcdir/_slaap2" ] && { mv "$epcdir/_slaap2" "$epcdir/_slaap"; echo "Wacht op ander proces dat pc in '_slaap' zet."; while [ -f "$epcdir/_slaap" ];do sleep 1m;done; sleep 1m; }
