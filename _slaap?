@@ -1,0 +1,30 @@
+########################################################################
+#	In te sluiten in script dat meermaals in loop wordt uitgevoerd,
+#	om a.d.h.v. de naam van dit bestand die loop te controleren.
+#
+#	Gebruik in het insluitende script :
+#		- zet een variable epcdir="moederdirectory van dit bestand/"
+#			- de waarde "$epcdir" wordt in dit bestand gebruikt (en bestandsnamen daarin gewijzigd !!!)
+#		- sluit dit bestand in met de source-opdracht, onder zijn verschillende alternatieve namen (zie Werking):
+#			source "$epcdir/_slaap"*
+#			OF
+#			. "$epcdir/_slaap"*
+#		- hou in "$epcdir/" slechts 1 bestand (DIT bestand) met een naam die met die jokertekens overeenkomt;
+#			anders hangt de werking af van de expansie-volgorde van die jokertekens: de naam met de 1ste
+#			expansie wordt uitgevoerd, met de andere namen als parameter. Als de expansie geen bestandsnaam
+#			vindt, geeft bash een simpele foutboodschap voor de source-opdracht
+#
+#	Werking procescontrole :
+#		- noem dit bestand "_slaap?" om het uit te schakelen
+#		- noem dit bestand "_slaap" (zonder vraagteken), om de pc in slaapstand te zetten; vooraf wordt het hernoemd
+#			tot "_slaap?" om het uit te schakelen voor de volgende keer
+#		- noem dit bestand "_slaap2", om het te hernoemen naar "_slaap", en te wachten tot een ander proces
+#			dat dit bestand insluit, de pc in slaapstand zet.
+#
+#	Benodigdheden :
+#		- Een script "~/bin/slaap" dat de pc ordentelijk in slaapstand zet. Dat kan b.v. de
+#			opdracht "systemctl suspend" zijn, met evt. toevoegingen naar wens.
+#	
+[ -n "$epcdir" -a -f "$epcdir/_slaap"  ] && { mv "$epcdir/_slaap"  "$epcdir/_slaap?"; echo ~/bin/slaap; }
+# OPM: afsluitend slaapje overbrugt tijd tss. mv naar _slaap? in ander proces, en effectieve slaapstand
+[ -n "$epcdir" -a -f "$epcdir/_slaap2" ] && { mv "$epcdir/_slaap2" "$epcdir/_slaap"; echo "Wacht op ander proces dat pc in '_slaap' zet."; while [ -f "$epcdir/_slaap" ];do sleep 1m;done; sleep 1m; }

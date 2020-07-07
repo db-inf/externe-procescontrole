@@ -1,0 +1,13 @@
+8
+#	Het aantal threads dat een script mag gebruiken in cpu-intensieve taken zoals ffmpeg.
+#	Het wordt gelezen uit het bestand "_threads", typisch in de directory "$epcdir/",
+#	waar epcdir een variabele van het proces is.
+#	De waarde voor dat aantal threads :
+#	- moet een geheel getal zijn tussen 1 en het aantal processors
+#	- wordt gelezen uit de eerste lijn van dit bestand
+#	- staat alleen op die lijn
+#	- wordt onmiddelijk gevolgd door een nieuwe lijn
+#	- kan gewijzigd worden om een volgende doorgang door het script te beinvloeden
+#	- moet verder geinterpreteerd worden door het script dat ze gebruikt, b.v. als volgt:
+#		<"$epcdir/_threads" read threads && echo "$threads threads requested" && [[ "$threads" -ge 1 && "$threads" -le $(nproc) ]] && threads=(-threads:v "$threads") || unset threads
+#		ffmpeg "${threads[@]}" ...

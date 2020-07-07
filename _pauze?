@@ -1,0 +1,25 @@
+########################################################################
+#	In te sluiten in script dat meermaals in loop wordt uitgevoerd,
+#	om a.d.h.v. de naam van dit bestand die loop te controleren.
+#
+#	Gebruik in het insluitende script :
+#		- zet een variable epcdir="moederdirectory van dit bestand/"
+#			- de waarde "$epcdir" wordt in dit bestand gebruikt
+#		- sluit dit bestand in met de source-opdracht, onder zijn verschillende alternatieve namen (zie Werking):
+#			source "$epcdir/_pauze"*
+#			OF
+#			. "$epcdir/_pauze"*
+#		- hou in "$epcdir/" slechts 1 bestand (DIT bestand) met een naam die met die jokertekens overeenkomt;
+#			anders hangt de werking af van de expansie-volgorde van die jokertekens: de naam met de 1ste
+#			expansie wordt uitgevoerd, met de andere namen als parameter. Als de expansie geen bestandsnaam
+#			vindt, geeft bash een simpele foutboodschap voor de source-opdracht
+#
+#	Werking procescontrole :
+#		- noem dit bestand "_pauze?" om het uit te schakelen
+#		- noem dit bestand "_pauze" (zonder vraagteken), om het proces telkens 1 minuut te pauzeren,
+#			zolang het die naam heeft.
+#
+#	Benodigdheden :
+#		- geen
+#	
+while [ -f "$epcdir/_pauze" ] ;do echo "PAUZE GEVRAAGD (telkens 1 minuut)"; sleep 1m;done

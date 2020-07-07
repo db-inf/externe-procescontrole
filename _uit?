@@ -1,0 +1,29 @@
+########################################################################
+#	In te sluiten in script dat meermaals in loop wordt uitgevoerd,
+#	om a.d.h.v. de naam van dit bestand die loop te controleren.
+#
+#	Gebruik in het insluitende script :
+#		- zet een variable epcdir="moederdirectory van dit bestand/"
+#			- de waarde "$epcdir" wordt in dit bestand gebruikt (en bestandsnamen daarin gewijzigd !!!)
+#		- sluit dit bestand in met de source-opdracht, onder zijn verschillende alternatieve namen (zie Werking):
+#			source "$epcdir/_uit"*
+#			OF
+#			. "$epcdir/_uit"*
+#		- hou in "$epcdir/" slechts 1 bestand (DIT bestand) met een naam die met die jokertekens overeenkomt;
+#			anders hangt de werking af van de expansie-volgorde van die jokertekens: de naam met de 1ste
+#			expansie wordt uitgevoerd, met de andere namen als parameter. Als de expansie geen bestandsnaam
+#			vindt, geeft bash een simpele foutboodschap voor de source-opdracht
+#
+#	Werking procescontrole :
+#		- noem dit bestand "_uit?" om het uit te schakelen
+#		- noem dit bestand "_uit" (zonder vraagteken), om de pc uit te zetten; vooraf wordt het hernoemd
+#			tot "_uit?" om het uit te schakelen voor de volgende keer
+#		- noem dit bestand "_uit2", om het te hernoemen naar "_uit", en te wachten tot een ander proces
+#			dat dit bestand insluit, de pc uit zet.
+#
+#	Benodigdheden :
+#		- Een script "~/bin/uit" dat de pc ordentelijk uit zet. Dat kan b.v. de
+#			opdracht "shutdown now" zijn, met evt. toevoegingen naar wens.
+#	
+[ -n "$epcdir" -a -f "$epcdir/_uit"  ] && { mv "$epcdir/_uit"  "$epcdir/_uit?"; ~/bin/uit; }
+[ -n "$epcdir" -a -f "$epcdir/_uit2" ] && { mv "$epcdir/_uit2" "$epcdir/_uit"; echo "Wacht op ander proces dat pc '_uit' zet"; while true;do sleep 10m; done; }
