@@ -1,30 +1,55 @@
 ########################################################################
-#	In te sluiten in script dat meermaals in loop wordt uitgevoerd,
-#	om a.d.h.v. de naam van dit bestand die loop te controleren.
+#	In te sluiten in lang durende reeksen of lussen van bash shellopdrachten,
+#	om a.d.h.v. de naam van het bronbestand van dit script, die
+#	processen te controleren.
 #
 #	Gebruik in het insluitende script :
-#		- zet een variable epcdir="moederdirectory van dit bestand/"
-#			- de waarde "$epcdir" wordt in dit bestand gebruikt (en bestandsnamen daarin gewijzigd !!!)
-#		- sluit dit bestand in met de source-opdracht, onder zijn verschillende alternatieve namen (zie Werking):
-#			source "$epcdir/_slaap"*
-#			OF
-#			. "$epcdir/_slaap"*
-#		- hou in "$epcdir/" slechts 1 bestand (DIT bestand) met een naam die met die jokertekens overeenkomt;
-#			anders hangt de werking af van de expansie-volgorde van die jokertekens: de naam met de 1ste
-#			expansie wordt uitgevoerd, met de andere namen als parameter. Als de expansie geen bestandsnaam
-#			vindt, geeft bash een simpele foutboodschap voor de source-opdracht
+#		- stel een variabele in met als naam "epcdir", en als waarde de directory waarin dit
+#			script staat:
+#				epcdir="moederdirectory van dit bestand/"
+#			- het proces moet uitvoeren met schrijftoegang tot die directory, zodat het ingesloten
+#				script de naam van zijn bronbestand kan wijzigen als deel van zijn werking
+#		- sluit dit script in met de source-opdracht, met een jokerteken voor de
+#			verschillende namen van zijn bronbestand als volgt (zie ook sectie 'Werking procescontrole'):
+#				source "$epcdir/_slaap"*
+#				OF
+#				. "$epcdir/_slaap"*
+#		- hou in "$epcdir/" slechts 1 bestand (DIT bestand) met een naam die met dat jokerteken
+#			overeenkomt; anders hangt de werking af van de expansie-volgorde van het jokerteken:
+#			de naam met de 1ste expansie wordt uitgevoerd, met de andere bestanddsnamen als
+#			parameter. Als de expansie geen bestandsnaam vindt, geeft bash een foutboodschap
+#			voor de source-opdracht.
 #
 #	Werking procescontrole :
-#		- noem dit bestand "_slaap?" om het uit te schakelen
-#		- noem dit bestand "_slaap" (zonder vraagteken), om de pc in slaapstand te zetten; vooraf wordt het hernoemd
-#			tot "_slaap?" om het uit te schakelen voor de volgende keer
-#		- noem dit bestand "_slaap2", om het te hernoemen naar "_slaap", en te wachten tot een ander proces
-#			dat dit bestand insluit, de pc in slaapstand zet.
+#		- noem dit bestand "_slaap?" om dit script te neutraliseren.
+#		- noem dit bestand "_slaap" (zonder vraagteken), om de computer in slaapstand te zetten
+#			wanneer de shell de plaats bereikt waar dit script is ingesloten; vooraf hernoemt dit
+#			script zijn bronbestand tot "_slaap?", om geneutraliseerd te beginnen wanneer later
+#			nog een proces wordt gestart dat dit script insluit.
+#		- om meerdere shell-processsen gecoördineerd de computer in slaapstand te laten zetten,
+#			wanneer ze elk op een punt gekomen zijn waar dit script is ingesloten, noemt u dit
+#			bestand "_slaap2" tot "_slaap9", met het cijfer gelijk aan het aantal te
+#			coördineren shell-processen, maximaal 9 dus. In elk shell-proces dat het punt van
+#			insluiting bereikt, verlaagt dit script dat cijfer in de naam van zijn bronbestand
+#			 met 1 ("_slaap2" hernoemt zich als laatste naar "_slaap" i.p.v. "_slaap1"), en wacht
+#			het tot uiteindelijk de laatste shell op het insluitpunt komt en de computer in
+#			slaapstand zet.
+#
 #
 #	Benodigdheden :
-#		- Een script "~/bin/slaap" dat de pc ordentelijk in slaapstand zet. Dat kan b.v. de
-#			opdracht "systemctl suspend" zijn, met evt. toevoegingen naar wens.
+#		- Een script "~/bin/slaap", of elders op het pad, dat de computer ordentelijk in slaapstand zet. Dat
+#			kan b.v. de opdracht "systemctl suspend" zijn, met evt. toevoegingen naar wens.
 #	
 [ -n "$epcdir" -a -f "$epcdir/_slaap"  ] && { mv "$epcdir/_slaap"  "$epcdir/_slaap?"; ~/bin/slaap; }
-# OPM: afsluitend slaapje overbrugt tijd tss. mv naar _slaap? in ander proces, en effectieve slaapstand
-[ -n "$epcdir" -a -f "$epcdir/_slaap2" ] && { mv "$epcdir/_slaap2" "$epcdir/_slaap"; echo "Wacht op ander proces dat pc in '_slaap' zet."; while [ -f "$epcdir/_slaap" ];do sleep 1m;done; sleep 1m; }
+[ -n "$epcdir" -a -f "$epcdir/_slaap"[2-9] ] && {
+	num=$(echo "$epcdir/_slaap"[2-9]);# no pathname expansion in variable assignment, force it with $(echo ...)
+	# split of the sequence number and decrement. But rename to _slaap instead of _slaap1
+	num=${num: -1};
+	[ $num -gt 2 ] &&
+		mv "$epcdir/_slaap"[2-9] "$epcdir/_slaap"$((num-1)) ||
+		mv "$epcdir/_slaap"[2-9] "$epcdir/_slaap"; 
+	echo "Wacht op ander proces dat pc in '_slaap' zet.";
+	until [ -f "$epcdir/_slaap?" ];do sleep 1m;done
+	# OPM: afsluitend slaapje overbrugt tijd tss. mv naar _slaap? in ander proces, en effectieve slaapstand
+	sleep 1m;
+}

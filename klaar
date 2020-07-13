@@ -1,0 +1,93 @@
+#!/bin/bash
+[ "$1" == "-h" -o "$1" == "--help" ] && {
+	cat;
+	echo;
+	echo -n "Huidige belasting: ";
+	cat /proc/loadavg
+	echo;
+	exit 0;
+} <<"Usage"
+## Script 'klaar' wacht tot de pc-belasting onder een gekozen limiet valt,
+## gemiddeld over een gekozen periode. Daarna voert de shell de opdrachten uit,
+## die na een ';' achter dit script staan.
+##
+## Dit script is een alternatief voor de sleep-opdracht, die enkel een vaste
+## tijdsduur wacht.
+##
+## Afbreken met Ctrl-C kan, en de opdrachten na de ';' vervallen in dat geval.
+##
+## Gebruik : 
+##  klaar [limiet [periode]]; opdracht ...
+##   limiet : belastingsindicator, standaard 0.75
+##   periode : gemiddelde over 1, 5 of 10 (minuten), standaard 10
+##   opdracht ... worden uitgevoerd als klaar stopt is (d.w.z. pc niet meer bezig)
+##
+## Voorbeeld :
+##  klaar;cp -r /media/ramdisk/* /media/harddisk/;sleep 30;sync;systemctl suspend
+##   Deze opdracht wacht tot alle taken klaar zijn, kopieert dan ramdisk naar HDD, 
+##   wacht 30 sec. om dat tijd te geven, consolideert, en zet dan de pc in slaap.
+##
+## Dit script gebruikt de opdracht bc voor een berekening met vlottende komma,
+## maar is gemakkelijk aan te passen voor berekening met vaste komma door bash.
+##
+## Dit script test om de 10 sec. de gemiddelde belasting over 10min. via
+## /proc/loadavg
+Usage
+##	/proc/loadavg provides a look at the load average in regard to both the CPU and
+##	IO over time. A sample /proc/loadavg file looks similar to the following:
+##		0.20 0.18 0.12 1/80 11206
+##	The first three columns measure CPU and IO utilization of the last one, five,
+##	and 10 minute periods. The fourth column shows the number of currently running
+##	processes and the total number of processes. The last column displays the last
+##	process ID used.
+# DEFAULTS
+	# nr van veld in /proc/loadavg
+veld=3
+limiet=0.75
+# UITLEG, ook gebruikt voor parametercontrole: $2 moet geldig aantal minuten zijn
+periode=("" 1 5 10)
+# als param 1 geldig (floating point) getal is, wijs dan toe aan limiet
+if [ -n "$1" ]
+then
+	if echo "$1" | grep -Eq '^[-+]?[0-9]+\.?[0-9]*$'
+	then
+		limiet="$1"
+	else
+		echo "limiet '$1' is geen getal"
+		exit 1
+	fi
+fi
+if [ -n "$2" ] 
+then 
+	# loop over alle indexen van array periode; periode[0] is "", dus nooit
+	# gelijk aan niet-lege $2
+	for i in "${!periode[@]}" "ONGELDIG"
+	do
+		if [ "$i" = "ONGELDIG" ]
+		then
+			echo "Alleen gemiddelden over ${periode[@]} minuten zijn mogelijk, niet $2"
+			exit 2
+		fi
+		# aanvaarden invoer met (hoe onhandig ook) en zonder '-minuutteken
+		if [[ "${2%\'}" = "${periode[$i]}" ]]
+		then
+			veld="$i"
+			break
+		fi
+	done
+fi
+
+echo "# Script 'klaar' wacht tot de pc-belasting < $limiet, gemiddeld over ${periode[$veld]}'"
+echo "# Daarna voert bash de opdrachten uit, die na een ';' achter dit script staan."
+echo "# Afbreken met Ctrl-C kan, en de opdrachten na de ; vervallen in dat geval."
+# OPGELET : [[ ]]-operators < en > vergelijken "lexicografically"
+# OPGELET : bash arithmetic is integer; pijp floating point input naar "bc -l"
+echo -ne "Belasting: "
+cat /proc/loadavg | tr -d '\n'
+while [ $(echo "$(cut -d ' ' -f $veld /proc/loadavg) > $limiet" | bc -l) = 1 ] 
+do
+	sleep 10
+	echo -ne "                                                 \rBelasting: "
+	cat /proc/loadavg | tr -d '\n'
+done
+echo

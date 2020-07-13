@@ -1,25 +1,49 @@
 ########################################################################
-#	In te sluiten in script dat meermaals in loop wordt uitgevoerd,
-#	om a.d.h.v. de naam van dit bestand die loop te controleren.
+#	In te sluiten in lang durende reeksen of lussen van bash shellopdrachten,
+#	om a.d.h.v. de naam van het bronbestand van dit script, die
+#	processen te controleren.
 #
 #	Gebruik in het insluitende script :
-#		- zet een variable epcdir="moederdirectory van dit bestand/"
-#			- de waarde "$epcdir" wordt in dit bestand gebruikt
-#		- sluit dit bestand in met de source-opdracht, onder zijn verschillende alternatieve namen (zie Werking):
+#		- stel een variabele in met als naam "epcdir", en als waarde de directory waarin dit
+#			script staat:
+#				epcdir="moederdirectory van dit bestand/"
+#			- het proces moet uitvoeren met schrijftoegang tot die directory, zodat het ingesloten
+#				script de naam van zijn bronbestand kan wijzigen als deel van zijn werking
+#		- sluit dit script in met de source-opdracht, met een jokerteken voor de
+#			verschillende namen van zijn bronbestand als volgt (zie ook sectie 'Werking procescontrole'):
 #			source "$epcdir/_pauze"*
 #			OF
 #			. "$epcdir/_pauze"*
-#		- hou in "$epcdir/" slechts 1 bestand (DIT bestand) met een naam die met die jokertekens overeenkomt;
-#			anders hangt de werking af van de expansie-volgorde van die jokertekens: de naam met de 1ste
-#			expansie wordt uitgevoerd, met de andere namen als parameter. Als de expansie geen bestandsnaam
-#			vindt, geeft bash een simpele foutboodschap voor de source-opdracht
+#		- om op meerdere punten van een script of andere reeks opdrachten naar keuze te pauzeren, voegt u een
+#		  parameter toe achter de insluiting, met de naam van het script + een suffix om enkel op dat punt te
+#		  pauzeren. Zie sectie 'Werking procescontrole' voor meer details. Voorbeeld:
+#			source "$epcdir/_pauze"* _pauzeLijn10
+#			OF
+#			. "$epcdir/_pauze"* _pauzeLijn10
+#		- hou in "$epcdir/" slechts 1 bestand (DIT bestand) met een naam die met dat jokerteken
+#			overeenkomt; anders hangt de werking af van de expansie-volgorde van het jokerteken:
+#			de naam met de 1ste expansie wordt uitgevoerd, met de andere bestanddsnamen als
+#			parameter. Als de expansie geen bestandsnaam vindt, geeft bash een foutboodschap
+#			voor de source-opdracht.
 #
 #	Werking procescontrole :
-#		- noem dit bestand "_pauze?" om het uit te schakelen
+#		- noem dit bestand "_pauze?" om dit script te neutraliseren.
 #		- noem dit bestand "_pauze" (zonder vraagteken), om het proces telkens 1 minuut te pauzeren,
-#			zolang het die naam heeft.
+#			zolang het die naam heeft, op elk punt in de reeks opdrachten waar het script werd ingesloten.
+#		- voeg een suffix toe aan de naam van dit bestand, b.v. "_pauzeLijn10" zoals in het voorbeeld in sectie
+#			'Gebruik', om enkel te pauzeren op die punten waar achter de insluiting nog eens als parameter
+#			die naam met suffix is opgegeven. Op al die punten wordt nog steeds gepauzeerd wanneer dit
+#			bestand gewoon "_pauze" is genoemd.
 #
 #	Benodigdheden :
 #		- geen
-#	
-while [ -f "$epcdir/_pauze" ] ;do echo "PAUZE GEVRAAGD (telkens 1 minuut)"; sleep 1m;done
+#
+
+# "${BASH_SOURCE[0]}" geeft bestandsnaam van de bron van een source-opdracht, alsof dat een functie-aanroep is (zie ook bash-variable FUC)
+# In een andere shell dan bash zou de while-test de volgende kunnen zijn:
+#	while [ -f "$epcdir/_pauze" ] || [ -f "$epcdir/_pauze"* -a "$epcdir/_pauze"* = "$epcdir/${@: -1}" ]
+while [ -f "$epcdir/_pauze" ] || [ "${BASH_SOURCE[0]}" = "$epcdir/${@: -1}" -a -f "$epcdir/${@: -1}" ]
+do
+	echo "PAUZE GEVRAAGD (telkens 1 minuut)"
+	sleep 1m
+done
