@@ -1,8 +1,0 @@
-Procescontrole van een reeks of lus shellopdrachten
-===================================================
-
-De bestanden in deze directory controleren het verloop van een lang durende reeks of lus shellopdrachten. Ze kunnen in die reeks opdrachten ingesloten worden met de opdracht "source". Door vervolgens enkel hun naam te veranderen, kan de lus gepauzeerd worden, en kan de pc in slaapstand of uit gezet worden. Ook kan het aantal threads gewijzigd worden, dat zware opdrachten in de reeks mogen gebruiken.
-
-Meer over gebruik en werking is te lezen in de andere bestanden van dit project.
-
-Deze werkwijze voor procescontrole is uitvoerig getest in mijn  scripts voor hercompressie van video, uitgevoerd in een lus voor meerdere filmbestanden.
