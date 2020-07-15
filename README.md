@@ -5,6 +5,8 @@ De bestanden in deze directory controleren het verloop van een lang durende reek
 
 Meer over gebruik en werking is te lezen in de andere bestanden van dit project.
 
+Deze werkwijze voor procescontrole is uitvoerig getest in mijn  scripts voor hercompressie van video, uitgevoerd in een lus voor meerdere filmbestanden.
+
 Ook handig om b.v. een reeks shellopdrachten uitgesteld te starten, is de volgende functie, die u b.v. in ~/.bash_aliases kan definiëren:
 
     # start de hierna volgende shell-opdracht van een reeks opdrachten
@@ -12,5 +14,3 @@ Ook handig om b.v. een reeks shellopdrachten uitgesteld te starten, is de volgen
     # Voorbeeld: "wachttot 10:20; opdracht ..." (vandaag om 10u20)
     # Voorbeeld: "wachttot tomorrow 12:10; opdracht ..." (morgen om 12u10)
     wachttot() { sleep $(( $(date -d "$*" +%s) - $(date +%s) )); }
-
-Deze werkwijze voor procescontrole is uitvoerig getest in mijn  scripts voor hercompressie van video, uitgevoerd in een lus voor meerdere filmbestanden.
