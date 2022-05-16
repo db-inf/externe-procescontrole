@@ -1,0 +1,45 @@
+########################################################################
+#  In te sluiten in lang durende reeksen of lussen van bash shellopdrachten, om
+#  a.d.h.v. de naam van het bronbestand van dit script, of van een link ernaar,
+#  die processen te controleren.
+#
+#  Gebruik: dit script wijst de opdracht "cpulimit" en opties toe aan de array-veranderlijke "cpulimit" zoals hieronder beschreven. In uw eigen script voegt u als volgt de expansie van die array-veranderlijke in, om het cpu-beslag van een zware opdracht te beperken:
+# 	 "${cpulimit[@]}" mijn zware opdracht
+#  Voer dit bestand in een opdracht-loop, of vanuit een ander script, uit met de source-opdracht . of source, een pad waar nodig, en de wildcard '*' als volgt:
+# 	. [/path/]_cpulimit*
+# 	OF
+# 	source [/path/]_cpulimit*
+#
+#  Door dit script een andere naam te geven die begint met _cpulimit, kunt u zo zijn werking bij de volgende doorgang kiezen, als volgt:
+#  - onder de naam "_cpulimit?" wordt cpulimit=(), een no-op, en wordt "mijn zware opdracht" zonder meer uitgevoerd
+#  - onder de naam "_cpulimit", wordt cpulimit=(cpulimit -l $((50*$(nproc --all))) --foreground --), en wordt "mijn zware opdracht" beperkt tot 50% van de gezamenlijke cpu-kracht
+#  onder de naam van de vorm "_cpulimit 99", wordt 99 beschouwd als percentage van de totale cpu-kracht en, omgerekend naar aantal cpu-kernen, gebruikt als waarde voor de optie -l van de opdracht cpulimit: cpulimit=(cpulimit -l $((99*$(nproc -all))) --foreground --)
+#  - onder elke andere naam die begint met "_cpulimit", wordt die naam opgesplitst op de white spaces, de underscore van het eerste deel wordt verwijderd, en de andere delen worden ongewijzigd opgenomen als element van de array-veranderlijke cpulimit, zijnde de opties voor de opdracht cpulimit; indien niet aanwezig, worden wel de opties "-f" of "--foreground", en de afsluitende optie "--" toegevoegd
+#
+#  Benodigdheden :
+#  	- cpulimit
+#
+
+function cpulimit() {
+	unset -f cpulimit
+	# echo ARGS $*
+	cpulimit=($(echo $* | sed -E 's/^_cpulimit\?$//;s/^_(.*)/\1/')) # verwijder no-op plaatshouder "_cpulimit?", en anders prefix "_"
+	# echarr cpulimit
+	[ ${#cpulimit[@]} = 0 ] && return	#no-op
+	[ ${#cpulimit[@]} = 1 ] && cpulimit+=(50)	#voeg default percentage 50 toe, wordt verder behandeld in volgende test
+	[ ${#cpulimit[@]} = 2 ] &&
+		case "${cpulimit[1]}" in
+			''|*[!0-9]*) # leeg of niet-integer, gebruik ongewijzigd
+				;;       # (maar voeg seffens wel --foreground en -- toe waar nodig)
+			*)     # anders wel integer, vervolledig tot verplicht argument -l ##
+				cpulimit=("${cpulimit[0]}" -l $(( "${cpulimit[1]}" * $(nproc --all) )) ) ;;
+		esac
+	local elem;
+	# voeg parameter "-fg" (foreground) toe, indien niet opgegeven, om te voorkomen dat aanroepend script doorgaat wanneer "mijn zware opdracht" de 1ste keer gestopt wordt door cpulimit
+	while true;do for elem in "${cpulimit[@]}"; do [ "$elem" = "-f" -r "$elem" = "--foreground" ] && break 2; done; cpulimit=("${cpulimit[0]}" --foreground "${cpulimit[@]:1}"); break; done
+	# voeg afsluitende "--" (einde opties voor cpulimit) toe, indien niet opgegeven, als terminator vóór "mijn zware opdracht"
+	[ "${cpulimit[-1]}" = "--" ] || cpulimit+=("--")
+	# echarr cpulimit
+}
+	# "${BASH_SOURCE[0]}" : bestandsnaam van bron van source-opdracht, alsof dit een functie-aanroep is (zie ook bash-variable FUNCNAME)
+cpulimit "${BASH_SOURCE##*/}"

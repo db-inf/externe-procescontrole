@@ -45,15 +45,26 @@
 #  - Een script "uit" ergens op het pad (b.v. in ~/bin/), dat de computer
 #   ordentelijk uit zet. Dat kan b.v. de opdracht "shutdown now" zijn, met evt.
 #   toevoegingen naar wens.
-#  
-[ -n "$epcdir" -a -f "$epcdir/_uit"  ] && { mv "$epcdir/_uit"  "$epcdir/_uit?"; ~/bin/uit; }
+#
+[ -n "$epcdir" -a -f "$epcdir/_uit"  ] && { sleep 10m; mv "$epcdir/_uit"  "$epcdir/_uit?"; uit; sleep 10m; } # eerst 10m laten afkoelen, geef dan ~/bin/uit (typisch shutdown now) nog eens tot 10m om zijn werk te doen
 [ -n "$epcdir" -a -f "$epcdir/_uit"[2-9] ] && {
 	num=$(echo "$epcdir/_uit"[2-9]);# no pathname expansion in variable assignment, force it with $(echo ...)
-	# split of the sequence number and decrement. But rename to _uit instead of _uit1
+	# split off the sequence number and decrement. But rename to _uit instead of _uit1
 	num=${num: -1};
 	[ $num -gt 2 ] &&
 		mv "$epcdir/_uit"[2-9] "$epcdir/_uit"$((num-1)) ||
-		mv "$epcdir/_uit"[2-9] "$epcdir/_uit"; 
+		mv "$epcdir/_uit"[2-9] "$epcdir/_uit";
 	echo "Wacht op ander proces dat pc '_uit' zet";
 	while true;do sleep 10m; done;
 }
+
+## ONGETEST voor numerieke suffix > 9
+#	### 	# decrement suffix van de scriptnaam indien een integer 2 of meer
+#	[[ -n "$epcdir" &&  -f "${BASH_SOURCE[0]}" && ( "${BASH_SOURCE[0]}" =~ ^"$epcdir/_uit"[2-9]$ || "${BASH_SOURCE[0]}" =~ ^"$epcdir/_uit"[1-9][0-9]+$ ) ]] && {
+#		num="${BASH_SOURCE[0]#$epcdir/_uit}"	# behoud enkel suffix
+#		[ $num -gt 2 ] &&
+#			mv "${BASH_SOURCE[0]" "$epcdir/_uit"$((num-1)) ||
+#			mv "${BASH_SOURCE[0]" "$epcdir/_uit";
+#		echo "Wacht op ander proces dat pc '_uit' zet";
+#		while true;do sleep 10m; done;
+#	}
